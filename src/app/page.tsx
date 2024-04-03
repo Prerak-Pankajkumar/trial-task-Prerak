@@ -1,10 +1,11 @@
 import Link from "next/link";
-import Dashboard from "@/app/_components/dashboard";
 import { Button } from "@/components/ui/button";
 import { getServerAuthSession } from "@/server/auth";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const serverSession = await getServerAuthSession();
+  console.log("session", serverSession);
 
   return (
     <>
@@ -23,9 +24,9 @@ export default async function Home() {
               <div className="flex flex-col items-center justify-center gap-4">
                 <Button
                   asChild
-                  className={`h-full w-auto border bg-transparent from-[#adabaf] to-[#505053] p-5 text-3xl font-extrabold text-gray-300 transition duration-300 hover:bg-gradient-to-b`}
+                  className={`h-full w-auto bg-transparent bg-gradient-to-b from-[#adabaf] to-[#505053] p-5 text-3xl font-extrabold text-gray-300 transition duration-300`}
                 >
-                  <Link href={"/api/auth/signin"}>{"Sign In"}</Link>
+                  <Link href={"/auth/signin"}>{"Let's get started"}</Link>
                 </Button>
               </div>
             </div>
@@ -41,10 +42,5 @@ export default async function Home() {
 async function ShowcaseDashboard() {
   const session = await getServerAuthSession();
   if (!session?.user) return null;
-
-  return (
-    <main className="flex min-h-screen min-w-full bg-gray-800 text-white">
-      <Dashboard />
-    </main>
-  );
+  else redirect("/dashboard");
 }

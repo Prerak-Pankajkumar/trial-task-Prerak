@@ -43,8 +43,8 @@ export const CloudWallet = () => {
   useEffect(() => {
     if (session !== currentSession) {
       setCurrentSession(session);
-      if (session?.user?.name) {
-        void createOrUpdateSession(session.user.name, session.expires);
+      if (session?.user?.email) {
+        void createOrUpdateSession(session.user.email, session.expires);
       }
     }
   }, [session, currentSession, createOrUpdateSession]);

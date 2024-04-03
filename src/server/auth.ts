@@ -1,13 +1,14 @@
-import {
-  getServerSession,
-  type NextAuthOptions,
-  type User,
-} from "next-auth";
+import { getServerSession, type NextAuthOptions, type User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { db } from "@/server/db";
 import bcrypt from "bcrypt";
-import { type AuthUser, jwtHelper, tokenOneDay, tokenOneWeek } from "@/utils/jwtHelper";
+import {
+  type AuthUser,
+  jwtHelper,
+  tokenOneDay,
+  tokenOneWeek,
+} from "@/utils/jwtHelper";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db),
@@ -15,9 +16,60 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 60 * 60,
   },
+  pages: {
+    signIn: "/auth/signin",
+  },
   providers: [
     CredentialsProvider({
-      id: "next-auth",
+      name: "Credentials",
+      credentials: {
+        email: {
+          label: "Email Address",
+          type: "text",
+          placeholder: "Please enter email address",
+        },
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "xxxx-xxxx-xxxx",
+        },
+      },
+      async authorize(
+        credentials: Record<"email" | "password", string> | undefined,
+      ): Promise<User | null> {
+        try {
+          const user = await db.user.findFirst({
+            where: {
+              email: credentials?.email,
+            },
+          });
+
+          if (!user) {
+            return null;
+          }
+
+          if (user && credentials) {
+            const validPassword = await bcrypt.compare(
+              credentials?.password,
+              user.password,
+            );
+
+            if (validPassword && user?.email) {
+              return {
+                id: user.id,
+                email: user.email,
+              };
+            }
+          }
+        } catch (error) {
+          return null;
+        }
+        return null;
+      },
+    }),
+    CredentialsProvider({
+      id: "custom-signup",
+      name: "Credentials",
       credentials: {
         name: {
           label: "Username",
@@ -35,32 +87,20 @@ export const authOptions: NextAuthOptions = {
           placeholder: "xxxx-xxxx-xxxx",
         },
       },
-      async authorize(credentials: Record<"name" | "email" | "password", string> | undefined) : Promise<User | null> {
+      async authorize(
+        credentials: Record<"name" | "email" | "password", string> | undefined,
+      ): Promise<User | null> {
         try {
-          const user = await db.user.findFirst({
-            where: {
-              email: credentials?.email,
-            },
-          });
-
-          if (user && credentials) {
-            const validPassword = await bcrypt.compare(
-              credentials?.password,
-              user.password,
-            );
-
-            if (validPassword && user?.email) {
-              return {
-                id: user.id,
-                email: user.email,
-              };
-            }
-          } else if (!user && credentials) {
+          if (credentials) {
             const isUser = await db.user.findFirst({
               where: {
                 email: credentials.email,
               },
             });
+
+            if (isUser) {
+              return null;
+            }
 
             if (!isUser) {
               const hashPassword = await bcrypt.hash(credentials.password, 10);
@@ -74,21 +114,20 @@ export const authOptions: NextAuthOptions = {
 
               await db.account.create({
                 data: {
-                  userId: newUser.id, // Assign userId instead of providerAccountId
+                  userId: newUser.id,
                   type: "credentials",
-                  provider: "Next-Auth"
-                }
+                  provider: "Next-Auth",
+                },
               });
 
               return {
                 id: newUser.id,
-                name: newUser.name ?? '',
                 email: newUser.email,
               };
             }
           }
         } catch (error) {
-          console.log(error);
+          return null;
         }
         return null;
       },
@@ -97,7 +136,10 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        const authUser = { id: user.id, email: user.email, name: user.name } as AuthUser;
+        const authUser = {
+          id: user.id,
+          email: user.email,
+        } as AuthUser;
 
         const accessToken = await jwtHelper.createAccessToken(authUser);
         const refreshToken = await jwtHelper.createRefreshToken(authUser);
@@ -108,10 +150,9 @@ export const authOptions: NextAuthOptions = {
           where: {
             userId: authUser.id,
           },
-        })
+        });
 
-        if(isAccount) {
-          // Update the account with the new tokens and expiration times
+        if (isAccount) {
           await db.account.update({
             where: {
               id: isAccount.id,
@@ -121,7 +162,7 @@ export const authOptions: NextAuthOptions = {
               refresh_token: refreshToken,
               expires_at: accessTokenExpired,
               token_type: "Bearer",
-            }
+            },
           });
         }
 
@@ -146,7 +187,9 @@ export const authOptions: NextAuthOptions = {
               });
 
               if (user) {
-                const accessToken = await jwtHelper.createAccessToken(token.user);
+                const accessToken = await jwtHelper.createAccessToken(
+                  token.user,
+                );
                 const accessTokenExpired = Date.now() + tokenOneDay * 1000;
 
                 return { ...token, accessToken, accessTokenExpired };
@@ -160,11 +203,9 @@ export const authOptions: NextAuthOptions = {
 
       return token;
     },
-
     async session({ session, user }) {
       if (user) {
         session.user = {
-          name: user.name,
           email: user?.email,
           userId: user?.id,
         };

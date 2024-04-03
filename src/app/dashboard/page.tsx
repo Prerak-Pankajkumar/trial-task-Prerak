@@ -23,7 +23,9 @@ const Dashboard = () => {
           <>
             <SwapTranction
               initialRows={10}
-              subgraphURL={"https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"}
+              subgraphURL={
+                "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
+              }
               filterOptions={uniswapChains}
             />
           </>
@@ -32,7 +34,9 @@ const Dashboard = () => {
         return (
           <>
             <SwapTranction
-              subgraphURL={"https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"}
+              subgraphURL={
+                "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
+              }
               initialRows={10}
               filterOptions={uniswapChains}
             />
@@ -42,7 +46,9 @@ const Dashboard = () => {
         return (
           <>
             <SwapTranction
-              subgraphURL={"https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-eth"}
+              subgraphURL={
+                "https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-eth"
+              }
               initialRows={10}
               filterOptions={pancakeswapChains}
             />
@@ -54,7 +60,7 @@ const Dashboard = () => {
   }, [selectedOption]);
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="flex min-h-screen min-w-full bg-gray-800 text-white">
       {/* Side Menu */}
       <div className="w-64 bg-gray-800">
         <SideMenu />

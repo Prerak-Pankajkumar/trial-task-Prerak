@@ -3,10 +3,16 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "./data-table";
 import { SelectChains } from "./chain-filter";
 import { toast } from "@/components/ui/use-toast";
+
+export interface ChainFilterOptionInterface {
+  name: string;
+  value: string;
+}
 interface SwapTranctionInterface {
-  subgraphParameter?: string;
+  subgraphURL: string;
   multiSubGraph?: string[];
   initialRows: number;
+  filterOptions: ChainFilterOptionInterface[];
 }
 interface TokenInterface {
   id: string;
@@ -34,8 +40,9 @@ interface SwapTransactionInterface {
 }
 
 export const SwapTranction = ({
-  subgraphParameter,
+  subgraphURL,
   initialRows,
+  filterOptions,
 }: SwapTranctionInterface) => {
   const [swapTransactions, setSwapTransactions] = useState<
     SwapTransactionInterface[]
@@ -102,10 +109,11 @@ export const SwapTranction = ({
     },
   ];
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const uniswapGraphQuery = `{
+  const fetchData = useCallback(
+    async (subgraphURL: string) => {
+      setLoading(true);
+      try {
+        const uniswapGraphQuery = `{
         swaps(first: ${first}) {
           id
           pool {
@@ -128,50 +136,56 @@ export const SwapTranction = ({
           amountUSD
         }
       }`;
-      const options = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: uniswapGraphQuery,
-        }),
-      };
-      const response = await fetch(
-        `https://api.thegraph.com/subgraphs/name/${subgraphParameter}`,
-        options,
-      );
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const queryResult = response && (await response.json());
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const newSwapTransactions = queryResult?.data
-        ?.swaps as SwapTransactionInterface[];
-      if (newSwapTransactions) {
-        setLoading(false);
-        setSwapTransactions(newSwapTransactions);
+        const options = {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            query: uniswapGraphQuery,
+          }),
+        };
+        const response = await fetch(subgraphURL, options);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const queryResult = response && (await response.json());
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        const newSwapTransactions = queryResult?.data
+          ?.swaps as SwapTransactionInterface[];
+        if (newSwapTransactions) {
+          setLoading(false);
+          setSwapTransactions(newSwapTransactions);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: "There was a problem with your request.",
+        });
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong.",
-        description: "There was a problem with your request.",
-      });
-    }
-  }, [first, subgraphParameter]);
+    },
+    [first],
+  );
 
   const onLoadMore = () => {
     setFirst(first + 10);
-    void fetchData();
+    void fetchData(subgraphURL);
+  };
+
+  const onSelectChain = (value: string) => {
+    void fetchData(value);
   };
 
   useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
+    void fetchData(subgraphURL);
+  }, [fetchData, subgraphURL]);
 
   return (
     <>
       <div className="container mx-auto py-10">
         <div className="mb-5 flex justify-end">
-          <SelectChains />
+          <SelectChains
+            filterOptions={filterOptions}
+            onSelect={onSelectChain}
+          />
         </div>
         {swapTransactions && (
           <DataTable

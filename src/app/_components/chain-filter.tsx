@@ -6,38 +6,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { type ChainFilterOptionInterface } from "./swap-transaction-table";
+interface ChainFilterInterface {
+  filterOptions: ChainFilterOptionInterface[];
+  onSelect: (selected: string) => void;
+}
 
-export const SelectChains = () => {
+export const SelectChains = ({
+  filterOptions,
+  onSelect,
+}: ChainFilterInterface) => {
+  const handleChange = (value: string) => {
+    onSelect(value);
+  };
+
   return (
-    <Select>
+    <Select onValueChange={handleChange}>
       <SelectTrigger className="w-[280px] bg-transparent">
         <SelectValue placeholder="Select a Chain" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3?source=uniswap">
-          Etereum
-        </SelectItem>
-        <SelectItem value="https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon?source=uniswap">
-          Polygon
-        </SelectItem>
-        <SelectItem value="https://api.thegraph.com/subgraphs/name/ianlapham/optimism-post-regenesis?source=uniswap">
-          Optimism
-        </SelectItem>
-        <SelectItem value="https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-arbitrum-one?source=uniswap">
-          Arbitrum
-        </SelectItem>
-        <SelectItem value="https://api.thegraph.com/subgraphs/name/jesse-sawa/uniswap-celo?source=uniswap">
-          Celo
-        </SelectItem>
-        <SelectItem value="https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-bsc?source=uniswap">
-          BNB Chain
-        </SelectItem>
-        <SelectItem value="https://api.studio.thegraph.com/query/48211/uniswap-v3-base/version/latest?source=uniswap">
-          Base
-        </SelectItem>
-        <SelectItem value="https://api.thegraph.com/subgraphs/name/lynnshaoyu/uniswap-v3-avax?source=uniswap">
-          Avalanche
-        </SelectItem>
+        {filterOptions.map((item, index) => (
+          <SelectItem key={index} value={item.value}>
+            {item.name}
+          </SelectItem>
+        ))}
       </SelectContent>
     </Select>
   );

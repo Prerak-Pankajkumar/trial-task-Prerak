@@ -4,14 +4,18 @@ import { signOut, useSession } from "next-auth/react";
 import { CloudWallet } from "./cloud-wallet";
 import { Button } from "@/components/ui/button";
 import { useDisconnect, useAccount } from "wagmi";
+import { useRouter } from "next/navigation";
 
 const SideMenu = () => {
   const { data: session, status } = useSession();
   const { disconnect } = useDisconnect();
   const { address } = useAccount();
+  const router = useRouter();
 
   const handleSignOut = async () => {
-    await signOut();
+    await signOut({ redirect: false }).then(() => {
+      router.push("/");
+    });
   };
 
   return (
@@ -44,7 +48,7 @@ const SideMenu = () => {
         <div className="w-full px-4 py-3 text-center">
           {address && (
             <Button
-              className="bg-transparent text-lg font-semibold text-white bg-slate-500"
+              className="bg-slate-500 bg-transparent text-lg font-semibold text-white"
               onClick={() => disconnect()}
             >
               Disconnect Wallet
