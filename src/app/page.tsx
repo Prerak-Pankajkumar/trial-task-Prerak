@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getServerAuthSession } from "@/server/auth";
-import { redirect } from "next/navigation";
 
 export default async function Home() {
   const serverSession = await getServerAuthSession();
-  console.log("session", serverSession);
 
   return (
     <>
@@ -42,5 +40,4 @@ export default async function Home() {
 async function ShowcaseDashboard() {
   const session = await getServerAuthSession();
   if (!session?.user) return null;
-  else redirect("/dashboard");
 }

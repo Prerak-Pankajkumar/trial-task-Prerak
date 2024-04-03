@@ -22,7 +22,7 @@ const SideMenu = ({ showSideMenu, toggleSideMenu }: SideMenuInterface) => {
   const handleSignOut = async () => {
     setLoading(true);
     await signOut({ redirect: false }).then(() => {
-      router.push("/");
+      router.push("/auth/signin");
       setLoading(false);
     });
   };
