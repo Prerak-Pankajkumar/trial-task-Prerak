@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { useCallback, useEffect, useState } from "react";
 import { type ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "./data-table";
@@ -13,6 +15,7 @@ interface SwapTranctionInterface {
   multiSubGraph?: string[];
   initialRows: number;
   filterOptions: ChainFilterOptionInterface[];
+  transactionTableType: string;
 }
 interface TokenInterface {
   id: string;
@@ -36,6 +39,7 @@ interface SwapTransactionInterface {
   token0: TokenInterface;
   token1: TokenInterface;
   amountUSD: string;
+  timestamp: string;
   transaction: TransactionInterface;
 }
 
@@ -43,6 +47,7 @@ export const SwapTranction = ({
   subgraphURL,
   initialRows,
   filterOptions,
+  transactionTableType,
 }: SwapTranctionInterface) => {
   const [swapTransactions, setSwapTransactions] = useState<
     SwapTransactionInterface[]
@@ -134,6 +139,7 @@ export const SwapTranction = ({
             symbol
           }
           amountUSD
+          timestamp
         }
       }`;
         const options = {
@@ -144,11 +150,31 @@ export const SwapTranction = ({
           }),
         };
         const response = await fetch(subgraphURL, options);
+        let response1;
+        if (transactionTableType == "All") {
+          response1 = await fetch(
+            "https://api.thegraph.com/subgraphs/name/pancakeswap/exchange-v3-eth",
+            options,
+          );
+        }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const queryResult = response && (await response.json());
+        let queryResult1;
+        if (response1 && transactionTableType == "All") {
+          queryResult1 = response1 && (await response1.json());
+        }
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        const newSwapTransactions = queryResult?.data
-          ?.swaps as SwapTransactionInterface[];
+        let newSwapTransactions = [
+          ...queryResult?.data?.swaps,
+          ...(transactionTableType == "All" ? [...queryResult1?.data?.swaps] : []),
+        ] as SwapTransactionInterface[];
+        newSwapTransactions = newSwapTransactions?.sort((a, b) =>
+          new Date(Number(a?.timestamp) * 1000) >
+          new Date(Number(b?.timestamp) * 1000)
+            ? -1
+            : 1,
+        );
+
         if (newSwapTransactions) {
           setLoading(false);
           setSwapTransactions(newSwapTransactions);
@@ -162,7 +188,7 @@ export const SwapTranction = ({
         });
       }
     },
-    [first],
+    [first, transactionTableType],
   );
 
   const onLoadMore = () => {

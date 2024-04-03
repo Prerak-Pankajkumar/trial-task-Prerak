@@ -11,6 +11,7 @@ import { pancakeswapChains, uniswapChains } from "@/constants";
 const Dashboard = () => {
   const { address } = useAccount();
   const [selectedOption, setSelectedOption] = React.useState("All");
+  const [showSideMenu, setShowSideMenu] = React.useState(false);
 
   const handleOptionSelect = (option: string) => {
     setSelectedOption(option);
@@ -27,6 +28,7 @@ const Dashboard = () => {
                 "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3"
               }
               filterOptions={uniswapChains}
+              transactionTableType="All"
             />
           </>
         );
@@ -39,6 +41,7 @@ const Dashboard = () => {
               }
               initialRows={10}
               filterOptions={uniswapChains}
+              transactionTableType="Uniswap"
             />
           </>
         );
@@ -51,6 +54,7 @@ const Dashboard = () => {
               }
               initialRows={10}
               filterOptions={pancakeswapChains}
+              transactionTableType="Pancakeswap"
             />
           </>
         );
@@ -62,8 +66,11 @@ const Dashboard = () => {
   return (
     <div className="flex min-h-screen min-w-full bg-gray-800 text-white">
       {/* Side Menu */}
-      <div className="w-64 bg-gray-800">
-        <SideMenu />
+      <div className="sideMenuRoot w-64 bg-gray-800">
+        <SideMenu
+          showSideMenu={showSideMenu}
+          toggleSideMenu={() => setShowSideMenu(!showSideMenu)}
+        />
       </div>
 
       {/* Main Content */}
@@ -71,6 +78,7 @@ const Dashboard = () => {
         <Header
           onOptionSelect={handleOptionSelect}
           selectedOption={selectedOption}
+          toggleSideMenu={() => setShowSideMenu(!showSideMenu)}
         />
 
         {/* Main Content */}
@@ -78,7 +86,7 @@ const Dashboard = () => {
           {address ? (
             <>
               <div className="container flex flex-col items-center justify-center gap-12 px-4 py-8">
-                <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
+                <h1 className="lg:[5rem] text-5xl font-extrabold tracking-tight sm:text-[2rem] md:text-[4rem]">
                   <span className="text-[hsl(280,100%,70%)]">
                     {selectedOption}
                   </span>{" "}
